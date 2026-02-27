@@ -1,13 +1,22 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from db import get_conn
 from schemas import (
     UsuarioCreate, HorarioCreate, PlatilloCreate,
-    OrdenCreate, OrdenEstadoUpdate, PagoCreate
+    OrdenCreate, OrdenEstadoUpdate, PagoCreate, LoginRequest
 )
 from datetime import datetime
 import random, string
 
 app = FastAPI(title="API Cafetería")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def gen_codigo_retiro(n=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
@@ -84,6 +93,40 @@ def list_usuarios():
     rows = cur.fetchall()
     cur.close(); conn.close()
     return rows
+
+
+@app.post("/auth/login")
+def login(data: LoginRequest):
+    identificador = data.identificador.strip()
+    if not identificador:
+        raise HTTPException(status_code=400, detail="Identificador requerido")
+
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT
+            u.idusuario,
+            u.idrol,
+            r.rol,
+            u.nombre,
+            u.email,
+            u.carnet,
+            u.telefono,
+            u.activo
+        FROM public.usuarios u
+        JOIN public.rol r ON r.idrol = u.idrol
+        WHERE (u.email = %s OR u.carnet = %s)
+        LIMIT 1;
+    """, (identificador, identificador))
+    user = cur.fetchone()
+    cur.close(); conn.close()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not user["activo"]:
+        raise HTTPException(status_code=403, detail="Usuario inactivo")
+
+    return user
 
 # -----------------------
 # HORARIOS

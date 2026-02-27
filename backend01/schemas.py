@@ -44,3 +44,7 @@ class PagoCreate(BaseModel):
     metodo: str
     monto: float
     referencia: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    identificador: str
