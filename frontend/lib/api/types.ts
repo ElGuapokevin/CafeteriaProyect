@@ -66,6 +66,7 @@ export interface Orden {
 	total: number;
 	created_at: string;
 	updated_at: string;
+	usuario_nombre?: string;
 }
 
 export interface OrdenDetalle {

@@ -283,15 +283,15 @@ def listar_ordenes(idusuario: int | None = None, estado: str | None = None):
     conn = get_conn()
     cur = conn.cursor()
 
-    q = "SELECT * FROM public.orden WHERE 1=1"
+    q = "SELECT o.*, u.nombre as usuario_nombre FROM public.orden o LEFT JOIN public.usuarios u ON o.idusuario = u.idusuario WHERE 1=1"
     params = []
     if idusuario is not None:
-        q += " AND idusuario=%s"
+        q += " AND o.idusuario=%s"
         params.append(idusuario)
     if estado is not None:
-        q += " AND estado=%s"
+        q += " AND o.estado=%s"
         params.append(estado)
-    q += " ORDER BY created_at DESC;"
+    q += " ORDER BY o.created_at DESC;"
 
     cur.execute(q, params)
     rows = cur.fetchall()
@@ -302,7 +302,7 @@ def listar_ordenes(idusuario: int | None = None, estado: str | None = None):
 def ver_orden(idorden: int):
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM public.orden WHERE idorden=%s;", (idorden,))
+    cur.execute("SELECT o.*, u.nombre as usuario_nombre FROM public.orden o LEFT JOIN public.usuarios u ON o.idusuario = u.idusuario WHERE o.idorden=%s;", (idorden,))
     orden = cur.fetchone()
     if not orden:
         cur.close(); conn.close()
@@ -376,9 +376,10 @@ def cola_cocina():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
-        SELECT * FROM public.orden
-        WHERE estado IN ('pagada','en_preparacion','lista')
-        ORDER BY created_at ASC;
+        SELECT o.*, u.nombre as usuario_nombre FROM public.orden o
+        LEFT JOIN public.usuarios u ON o.idusuario = u.idusuario
+        WHERE o.estado IN ('pagada','en_preparacion','lista')
+        ORDER BY o.created_at ASC;
     """)
     rows = cur.fetchall()
     cur.close(); conn.close()
