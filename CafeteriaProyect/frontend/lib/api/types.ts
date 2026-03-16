@@ -23,6 +23,7 @@ export interface Platillo {
 	precio: number;
 	stock: number;
 	imagen_url: string | null;
+	tiempocomida?: string;
 }
 
 export interface Horario {

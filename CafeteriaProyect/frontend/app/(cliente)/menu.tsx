@@ -16,29 +16,14 @@ function normalize(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function matchesCategory(product: Platillo, category: Category, horarioName?: string): boolean {
+function matchesCategory(product: any, category: Category, horario?: string | null): boolean {
   if (category === "Todos") return true;
 
-  const horario = normalize(horarioName ?? "");
-  const text = normalize(`${product.platillo} ${product.descripcion ?? ""}`);
+  // Usamos el horario (que viene del backend) o el campo tiempocomida
+  const categoriaPlatillo = normalize(horario ?? product.tiempocomida ?? "");
+  const categoriaBoton = normalize(category);
 
-  if (category === "Desayunos") {
-    return horario.includes("desayuno") || text.includes("desayuno") || text.includes("panque") || text.includes("huevo");
-  }
-  if (category === "Bebidas") {
-    return (
-      horario.includes("refaccion") ||
-      horario.includes("bebida") ||
-      text.includes("licuado") ||
-      text.includes("jugo") ||
-      text.includes("cafe") ||
-      text.includes("te")
-    );
-  }
-  if (category === "Almuerzos") {
-    return horario.includes("almuerzo") || horario.includes("cena") || text.includes("pollo") || text.includes("carne");
-  }
-  return horario.includes("postre") || text.includes("postre") || text.includes("pastel");
+  return categoriaPlatillo === categoriaBoton;
 }
 
 export default function MenuScreen() {

@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS public.facturas (
   serie      VARCHAR(20),
   numero     VARCHAR(30),
   nit        VARCHAR(20),
-  nombre     VARCHAR(150),
+  nombre      VARCHAR(150),
   direccion  TEXT,
   subtotal   NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (subtotal >= 0),
   impuesto   NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (impuesto >= 0),
@@ -216,34 +216,62 @@ INSERT INTO public.usuarios (idrol, nombre, email, carnet, telefono, password, a
 ((SELECT idrol FROM public.rol WHERE rol='cliente'),    'Luis Pérez',      'luis@correo.com',        'A2026003',  NULL,        '1234', true)
 ON CONFLICT (email) DO NOTHING;
 
--- /****************************/
--- horarios (6)
-INSERT INTO public.horarios (tiempocomida, hora_inicio, hora_fin, dias_semana, activo) VALUES
-('Desayuno',   '07:00', '09:30', ARRAY[1,2,3,4,5]::int[], true),
-('Refaccion',  '10:00', '11:00', ARRAY[1,2,3,4,5]::int[], true),
-('Almuerzo',   '12:00', '14:30', ARRAY[1,2,3,4,5]::int[], true),
-('Merienda',   '15:30', '16:30', ARRAY[1,2,3,4,5]::int[], true),
-('Cena',       '18:00', '20:30', ARRAY[1,2,3,4,5,6]::int[], true),
-('FinDeSemana','09:00', '13:00', ARRAY[6,7]::int[], true);
+-- ========================================================
+-- 1. HORARIOS (7 días de la semana)
+-- ========================================================
+TRUNCATE TABLE public.platillos CASCADE;
+TRUNCATE TABLE public.horarios CASCADE;
 
--- /****************************/
--- platillos (6)  (nombres únicos para que los SELECT sean claros)
-INSERT INTO public.platillos (idhorario, platillo, descripcion, precio, stock, imagen_url) VALUES
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayuno'),   'Desayuno Chapin', 'Huevos + frijol + plátano', 20.00, 50, 'https://www.haceloconhuevos.com/wp-content/uploads/2022/05/Desayuno-Ti%CC%81pico-Chapi%CC%81n.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayuno'),   'Panqueques',      'Panqueques con miel',       18.00, 30, 'https://www.rionegro.com.ar/wp-content/uploads/binrepository/image_content_10153684_20180928094306.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzo'),   'Pollo Asado',     'Pollo con arroz y ensalada',35.00, 40, 'https://i.pinimg.com/736x/e8/24/35/e82435ff3b45ccdb07121fd172f9ce2f.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzo'),   'Carne Guisada',   'Carne con papas y arroz',   38.00, 35, 'https://es.riverheadlocal.com/wp-content/uploads/2018/06/2018_0623_carne_guisada.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzo'),       'Hamburguesa',     'Hamburguesa con papas',     30.00, 25, 'https://static.vecteezy.com/system/resources/thumbnails/070/327/872/small/a-hamburger-with-cheese-lettuce-and-onions-photo.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Refaccion'),  'Licuado Banana',  'Licuado de banano',         12.00, 60, 'https://s3.amazonaws.com/static.realcaliforniamilk.com/media/recipes_2/banana-cardamom-milkshake.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Refaccion'),  'Coca Cola',  'Coca Cola ', 8.00, 60, 'https://superlacasita.com.gt/wp-content/uploads/2020/06/Bebidas-Sin-Alcohol-Agua-Gaseosa-Coca-Cola-Plastico-600-ml.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayuno'),  'Empanada',  'Empanada de carne', 10.00, 30, 'https://familiakitchen.com/wp-content/uploads/2021/09/Empanadas-open-e1631296397215.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayuno'),  'Tostadas',  'Tostadas con frijol y queso', 6.00, 30, 'https://pbs.twimg.com/media/CyNef_bWEAAsFSm.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayuno'),  'Panes de Chile Relleno',  'Chiles rellenos de carne', 10.00, 20, 'https://media-cdn.tripadvisor.com/media/photo-s/0f/91/da/a5/pan-con-chile-relleno.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzo'),  'Carne Asada',  'Carne asada guacamole y ensalada', 25.00, 30, 'https://storage.googleapis.com/avena-recipes-v2/2019/10/1571779556799.jpeg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postre'),  'Flan',  'Flan de vainilla', 9.00, 30, 'https://dietamediterranea.com/wp-content/uploads/2017/04/20170424-Flan-1024x768.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postre'),  'Gelatina',  'Gelatina de sabores', 5.00, 50, 'https://thumbs.dreamstime.com/b/tres-postres-coloridos-de-gelatina-en-vasos-pl%C3%A1stico-transparente-aislados-blanco-un-tr%C3%ADo-vivos-verde-y-amarillo-se-presenta-390597475.jpg'),
-((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postre'),  'Pastel de Chocolate',  'Pastel de chocolate con cobertura', 15.00, 25, 'https://www.renypicot.es/wp-content/uploads/2016/11/Cobertura-de-chocolate.-Tarta-de-chocolate.jpg');
+INSERT INTO public.horarios (tiempocomida, hora_inicio, hora_fin, dias_semana, activo) VALUES 
+('Desayunos', '07:00', '11:00', ARRAY[1,2,3,4,5,6,7], true),
+('Almuerzos', '12:00', '16:00', ARRAY[1,2,3,4,5,6,7], true),
+('Bebidas',   '07:00', '21:00', ARRAY[1,2,3,4,5,6,7], true),
+('Postres',   '10:00', '21:00', ARRAY[1,2,3,4,5,6,7], true);
 
+
+-- ========================================================
+-- 2. PLATILLOS (Con tus links originales)
+-- ========================================================
+INSERT INTO public.platillos (idhorario, platillo, descripcion, precio, stock, imagen_url) VALUES 
+
+-- CATEGORÍA: DESAYUNOS
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Desayuno Chapín', 'Huevos + frijol + plátano', 20.00, 50, 'https://imagenes.gozeri.com/productos/1742784712.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Panqueques', 'Panqueques con miel', 18.00, 30, 'https://facilycasero.com/wp-content/uploads/2020/07/Pancakes-without-Milk-post-1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Empanada', 'Empanada de carne', 10.00, 30, 'https://familiakitchen.com/wp-content/uploads/2021/09/Empanadas-open-e1631296397215.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Tostadas', 'Tostadas con frijol y queso', 6.00, 30, 'https://www.shutterstock.com/image-photo/guatemalan-mexican-antojito-made-crispy-260nw-1694648479.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Panes de Chile Relleno', 'Chiles rellenos de carne', 10.00, 20, 'https://media-cdn.tripadvisor.com/media/photo-s/0f/91/da/a5/pan-con-chile-relleno.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Nachos con Queso', 'Nachos con queso y carne', 15.00, 40, 'https://i.ytimg.com/vi/d6n4ziresl0/maxresdefault.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Tacos', 'Tres tacos de carne', 20.00, 35, 'https://danosseasoning.com/wp-content/uploads/2022/03/Beef-Tacos-1024x767.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Panes con Carne', 'Pan artesanal con carne', 15.00, 30, 'https://cdn0.recetasgratis.net/es/posts/4/3/9/baguette_de_carne_de_res_58934_orig.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Desayunos'), 'Papas Fritas', 'Porción de papas fritas', 12.00, 50, 'https://pbs.twimg.com/media/EiyFniyU0AI994D.jpg'),
+
+-- CATEGORÍA: BEBIDAS
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Licuado de Banana', 'Licuado natural', 12.00, 60, 'https://imag.bonviveur.com/batido-de-platano-foto-cerca.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Coca Cola', 'Gaseosa original', 8.00, 60, 'https://i5.walmartimages.com/asr/950f0dce-c71e-4d48-b03c-b6c5cacdb9cf.a30e1c1e700c2a3261ba3b0babf7b1e5.jpeg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Agua Pura', 'Botella 600ml', 5.00, 100, 'https://salvavidasenlinea.com.gt/wp-content/uploads/2022/07/28000316_600-Ml-Sc-12-Unidades_Linea-APS.png'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Agua Mineral', 'Agua con gas', 7.00, 80, 'https://cielitos.com.gt/wp-content/uploads/2024/03/mineral.png'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Shaca Laca', 'Bebida de leche', 10.00, 50, 'https://idealsa.com/wp-content/uploads/2022/06/Bodegon-Shakalaka-1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Jugo Del Valle', 'Sabor néctar', 8.00, 70, 'https://www.coca-cola.com/content/dam/onexp/gt/es/brands/del-valle/es_del%20valle_prod_fresh-citricos_750x750_v1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Pepsi', 'Lata fría', 8.00, 60, 'https://comprabien.net/wp-content/uploads/bebidas-pepsi-lata.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Bebidas'), 'Café', 'Café caliente', 10.00, 40, 'https://previews.123rf.com/images/kurapy11/kurapy111407/kurapy11140700035/29766353-a-paper-cup-of-black-coffee-and-coffee-beans-on-wooden-table.jpg'),
+
+-- CATEGORÍA: ALMUERZOS
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Pollo Asado', 'Pollo con acompañamiento', 35.00, 40, 'https://live.staticflickr.com/3074/2647473491_db3a8111df_b.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Carne Guisada', 'Receta tradicional', 38.00, 35, 'https://es.riverheadlocal.com/wp-content/uploads/2018/06/2018_0623_carne_guisada.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Hamburguesa', 'Hamburguesa con Papas', 30.00, 25, 'https://static.vecteezy.com/system/resources/thumbnails/070/327/872/small/a-hamburger-with-cheese-lettuce-and-onions-photo.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Carne Asada', 'Carne Asada con acompañamiento', 25.00, 30, 'https://nibblesandfeasts.com/wp-content/uploads/2025/05/Carne-Asada-1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Pizza', 'Pizza artesanal', 40.00, 20, 'https://assets.surlatable.com/m/15a89c2d9c6c1345/72_dpi_webp-REC-283110_Pizza-jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Burritos', 'Burrito relleno', 30.00, 15, 'https://assets.tmecosys.com/image/upload/t_web_rdp_recipe_584x480_1_5x/img/recipe/ras/Assets/9B350F25-7E38-4E9E-BA8C-1B0B8E1ED6F6/Derivates/a8be9735-95a8-4720-b32a-deabfe765f1a.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Almuerzos'), 'Chalupas', 'Orden de chalupas', 25.00, 15, 'https://topsecretrecipes.com/images/product/taco-bell-chalupa-supreme-copycat-recipe.jpg'),
+
+-- CATEGORÍA: POSTRES
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Flan', 'Flan de leche horneado', 9.00, 30, 'https://bitesbybianca.com/wp-content/uploads/2024/12/filipino-leche-flan-cover-1-500x500.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Gelatina', 'Gelatina mosaico', 5.00, 50, 'https://peopleenespanol.com/thmb/HcqiwY56MChjmdzmc9_iFIoRmzE=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/gelatina-mosaico-2000-83b273ebdd154042a00734b72ec0e576.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Pastel ', 'Pastel de chocolate', 15.00, 25, 'https://nuss.com.gt/wp-content/uploads/2025/07/nuss-2506003-pastel-de-chocolate-sin-gluten-sin-azcar-sin-lactosa-sin-nueces-1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Donas', 'Dona decorada', 7.00, 40, 'https://www.clarin.com/2021/06/02/H1ey_pHHt_0x750__1.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Fruta Picada', 'Vaso de fruta fresca', 12.00, 30, 'https://t3.ftcdn.net/jpg/00/88/34/74/360_F_88347497_UIbtGCNpBvyP7xsk7tyeygaUq7U0ARWV.jpg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Choco Bananos', 'Banano frío con chocolate', 5.00, 50, 'https://www.196flavors.com/wp-content/uploads/2020/08/chocobananos-1-FP.jpeg'),
+((SELECT idhorario FROM public.horarios WHERE tiempocomida='Postres'), 'Helado', 'Cono de vainilla', 10.00, 20, 'https://www.shutterstock.com/image-photo/vanilla-ice-cream-scoops-waffle-600nw-2661431663.jpg');
 -- /****************************/
 -- orden (6)  (codigo_retiro UNIQUE)
 -- Tip: pickup_at lo pongo relativo a now() para que sea válido cuando corras el script.
@@ -276,7 +304,7 @@ INSERT INTO public.orden (idusuario, idhorario, codigo_retiro, estado, pickup_at
 -- detalle_orden (6)  (1 detalle por orden para que sean 6 exactos)
 INSERT INTO public.detalle_orden (idorden, idplatillo, cantidad, precio_unitario, subtotal) VALUES
 ((SELECT idorden FROM public.orden WHERE codigo_retiro='RET-1001'),
- (SELECT idplatillo FROM public.platillos WHERE platillo='Desayuno Chapin'),
+ (SELECT idplatillo FROM public.platillos WHERE platillo='Desayuno Chapín'),
  1, 20.00, 20.00),
 
 ((SELECT idorden FROM public.orden WHERE codigo_retiro='RET-1002'),
@@ -296,7 +324,7 @@ INSERT INTO public.detalle_orden (idorden, idplatillo, cantidad, precio_unitario
  1, 30.00, 30.00),
 
 ((SELECT idorden FROM public.orden WHERE codigo_retiro='RET-1006'),
- (SELECT idplatillo FROM public.platillos WHERE platillo='Licuado Banana'),
+ (SELECT idplatillo FROM public.platillos WHERE platillo='Licuado de Banana'),
  1, 12.00, 12.00);
 
 -- /****************************/

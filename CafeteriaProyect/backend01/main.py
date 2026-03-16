@@ -185,10 +185,20 @@ def create_platillo(data: PlatilloCreate):
 def list_platillos(idhorario: int | None = None):
     conn = get_conn()
     cur = conn.cursor()
+    # Esta es la consulta corregida con el JOIN
+    query = """
+        SELECT p.*, h.tiempocomida 
+        FROM public.platillos p
+        INNER JOIN public.horarios h ON p.idhorario = h.idhorario
+    """
+    
     if idhorario is not None:
-        cur.execute("SELECT * FROM public.platillos WHERE idhorario=%s ORDER BY idplatillo DESC;", (idhorario,))
+        query += " WHERE p.idhorario = %s ORDER BY p.idplatillo DESC;"
+        cur.execute(query, (idhorario,))
     else:
-        cur.execute("SELECT * FROM public.platillos ORDER BY idplatillo DESC;")
+        query += " ORDER BY p.idplatillo DESC;"
+        cur.execute(query)
+        
     rows = cur.fetchall()
     cur.close(); conn.close()
     return rows

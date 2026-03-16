@@ -27,7 +27,8 @@ export default function CocinaScreen() {
   function handleLogout() {
     logout();
     try {
-      router.replace("/index");
+      // Expo Router expects routes like "/" (root) rather than "/index".
+      router.replace("/");
     } catch {
       router.push("/");
     }
@@ -112,10 +113,11 @@ export default function CocinaScreen() {
   }
 
   function renderColumn(title: string, data: Orden[], emptyMessage: string, isSmallScreen: boolean) {
-    const columnStyle = isSmallScreen 
-      ? [styles.column, { width: "100%", height: 350 }]
-      : [styles.column, { width: "49%", height: "49%" }];
-    
+    const columnWidth = isSmallScreen ? width - 24 : Math.floor(width * 0.49);
+    const columnHeight = isSmallScreen ? 350 : Math.floor(width * 0.49);
+
+    const columnStyle = [styles.column, { width: columnWidth, height: columnHeight }];
+
     return (
       <View key={title} style={columnStyle}>
         <View style={styles.columnHeader}>
